@@ -18,11 +18,11 @@
     "clean:deps": "rimraf node_modules",
     "clean:dist": "rimraf dist",
     "clean": "npm run clean:dist && npm run clean:deps",
-    "build": "npm run clean:dist && tsc",
-    "watch": "npm run clean:dist && tsc --watch",
-    "lint": "tslint --project tsconfig.json --config tslint.json 'src/**/*.ts'",
+    "build": "npm run clean:dist && tsc -p tsconfig.build.json",
+    "watch": "npm run clean:dist && tsc -p tsconfig.build.json --watch",
+    "lint": "tslint --project tsconfig.json --config tslint.json 'src/**/*.ts' 'test/**/*.ts'",
     "lint-fix": "npm run lint -- --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha -r ts-node/register 'test/*.spec.ts'"
   },
   "husky": {
     "hooks": {
@@ -30,9 +30,18 @@
     }
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/mocha": "^5.2.7",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "eosjs": "^20.0.0",
+    "eosjs-legacy": "npm:eosjs@^16.0.9",
     "husky": "^3.0.0",
+    "mocha": "^6.1.4",
     "prettier": "^1.18.2",
     "rimraf": "^2.6.3",
+    "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-plugin-prettier": "^2.0.1",
