@@ -38,7 +38,7 @@ const eos = new Api({
 Then, pass it to the Morpheos constructor:
 
 ```js
-import Morpheos from 'morpheos'
+import { Morpheos } from 'morpheos'
 
 const morph = new Morpheos(eos);
 
