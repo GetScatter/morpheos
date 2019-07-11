@@ -45,9 +45,9 @@ const morph = new Morpheos(eos);
 async function useMorph() {
   await morph.transact([
     {
-      account: 'eosio'
-      name: 'buyram'
-      authorization: [{ actor: 'myaccount', permission: 'active' }]
+      account: 'eosio',
+      name: 'buyram',
+      authorization: [{ actor: 'myaccount', permission: 'active' }],
       data: { ... }
     }
   ]);
