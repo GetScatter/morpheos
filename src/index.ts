@@ -49,7 +49,11 @@ export interface PaginationOptions {
 export class Morpheos {
   public eos: any
   constructor(eos: any) {
-    this.eos = eos
+    if (eos instanceof Morpheos) {
+      this.eos = eos.eos
+    } else {
+      this.eos = eos
+    }
   }
 
   public async transact(actions: Array<Action | SendableTransaction>) {
