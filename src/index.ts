@@ -10,15 +10,33 @@ export interface Action {
   data: any
 }
 
-export class SendableAction {
-  public payload: Action
+export class SendableTransaction {
+  public actions: Action[]
   public eos: Morpheos
-  constructor(payload: Action, eos: Morpheos) {
-    this.payload = payload
+
+  constructor(
+    payload: Action | SendableTransaction | Array<Action | SendableTransaction>,
+    eos: Morpheos
+  ) {
+    if (payload instanceof SendableTransaction) {
+      this.actions = payload.actions
+    } else if (!Array.isArray(payload)) {
+      this.actions = [payload]
+    } else {
+      this.actions = []
+      for (const p of payload) {
+        if (p instanceof SendableTransaction) {
+          this.actions = this.actions.concat(p.actions)
+        } else {
+          this.actions.push(p)
+        }
+      }
+    }
     this.eos = eos
   }
+
   public async send() {
-    return this.eos.transact([this.payload])
+    return this.eos.transact(this.actions)
   }
 }
 
@@ -34,8 +52,9 @@ export class Morpheos {
     this.eos = eos
   }
 
-  public async transact(actions: Array<Action | SendableAction>) {
-    actions = actions.map(a => (a instanceof SendableAction ? a.payload : a))
+  public async transact(actions: Array<Action | SendableTransaction>) {
+    const transaction = new SendableTransaction(actions, this)
+    actions = transaction.actions
     if (this.eos.transact) {
       return this.eos.transact(
         { actions },
