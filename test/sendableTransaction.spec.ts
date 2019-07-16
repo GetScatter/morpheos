@@ -34,7 +34,7 @@ class SendableTransactionTests {
     this.morph = new Morpheos(this.eos)
   }
 
-  @test.only(timeout(5000)) public async FlatteningActionsTest() {
+  @test(timeout(5000)) public async flatteningActions() {
     const action = {
       account: 'simplesimple',
       name: 'transfer',
@@ -46,7 +46,7 @@ class SendableTransactionTests {
     const t3 = new SendableTransaction([t1, t2], this.morph)
     const all = new SendableTransaction([action, t3], this.morph)
     assert.deepEqual(all.actions, [action, t1.actions[0], t2.actions[0]])
-    assert.isFulfilled(
+    await assert.isFulfilled(
       this.morph.transact([action, t3], {
         broadcast: false,
         sign: false

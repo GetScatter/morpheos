@@ -18,14 +18,14 @@ export class SendableTransaction {
     payload: Action | SendableTransaction | Array<Action | SendableTransaction>,
     eos: Morpheos
   ) {
-    if (payload instanceof SendableTransaction) {
+    if ('actions' in payload) {
       this.actions = payload.actions
     } else if (!Array.isArray(payload)) {
       this.actions = [payload]
     } else {
       this.actions = []
       for (const p of payload) {
-        if (p instanceof SendableTransaction) {
+        if ('actions' in p) {
           this.actions = this.actions.concat(p.actions)
         } else {
           this.actions.push(p)
