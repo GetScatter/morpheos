@@ -56,16 +56,24 @@ export class Morpheos {
     }
   }
 
-  public async transact(actions: Array<Action | SendableTransaction>) {
+  public async transact(
+    actions: Array<Action | SendableTransaction>,
+    {
+      broadcast = true,
+      sign = true
+    }: { broadcast?: boolean; sign?: boolean } = {}
+  ) {
     const transaction = new SendableTransaction(actions, this)
     actions = transaction.actions
     if (this.eos.transact) {
       return this.eos.transact(
         { actions },
-        { blocksBehind: 0, expireSeconds: 60 }
+        { blocksBehind: 0, expireSeconds: 60, broadcast, sign }
       )
     } else {
-      return this.eos.transaction({ actions })
+      // FIXME When not broadcasting, this returns the plain transaction
+      // instead of the serialized version that eosjs2 returns
+      return this.eos.transaction({ actions }, { broadcast, sign })
     }
   }
 
