@@ -71,7 +71,7 @@ export class Morpheos {
         { blocksBehind: 0, expireSeconds: 60, broadcast, sign }
       )
     } else {
-      // FIXME When not broadcasting, this returns the plain transaction
+      // TODO When not broadcasting, this returns the plain transaction
       // instead of the serialized version that eosjs2 returns
       return this.eos.transaction({ actions }, { broadcast, sign })
     }
@@ -109,7 +109,7 @@ export class Morpheos {
   }) {
     const result = await this.getTableRows(
       { code, scope, table },
-      { lower_bound: primaryKey, limit: 1 }
+      { lower_bound: primaryKey, upper_bound: primaryKey, limit: 1 }
     )
     return result.rows[0]
   }
