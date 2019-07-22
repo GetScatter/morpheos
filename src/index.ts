@@ -3,12 +3,17 @@ export interface Authorization {
   permission: string
 }
 
-export type FlexAuth = Authorization | string
+export interface ScatterAccount {
+  name: string
+  authority?: string
+}
+
+export type FlexAuth = Authorization | ScatterAccount | string
 
 export interface Action {
   account: string
   name: string
-  authorization: Authorization[]
+  authorization: FlexAuth | FlexAuth[]
   data: any
 }
 
@@ -33,6 +38,25 @@ export class Transaction {
           this.actions.push(p)
         }
       }
+    }
+    for (const action of this.actions) {
+      if (!Array.isArray(action.authorization)) {
+        action.authorization = [action.authorization]
+      }
+      action.authorization = action.authorization.map(auth => {
+        if (typeof auth === 'string') {
+          if (auth.includes('@')) {
+            const [actor, permission] = auth.split('@')
+            return { actor, permission }
+          } else {
+            return { actor: auth, permission: 'active' }
+          }
+        } else if ('name' in auth) {
+          return { actor: auth.name, permission: auth.authority || 'active' }
+        } else {
+          return auth
+        }
+      })
     }
     this.eos = eos
   }

@@ -10,7 +10,7 @@ import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig'
 import fetch from 'node-fetch'
 import { TextDecoder, TextEncoder } from 'util'
 
-import { Morpheos, Transaction } from '../src/index'
+import { Authorization, FlexAuth, Morpheos, Transaction } from '../src/index'
 
 const httpEndpoint = 'https://api.jungle.alohaeos.com'
 const privateKey = '5K3MYohjJLNfNGD6Dg2xuqiZcgKejos9bLHwwjkyw7eH3JxvyZj'
@@ -52,5 +52,56 @@ class SendableTransactionTests {
         sign: false
       })
     )
+  }
+
+  @test public convertingFlexAuth() {
+    const checkConversion = (
+      original: FlexAuth | FlexAuth[],
+      expected: Authorization[]
+    ) => {
+      const action = {
+        account: 'somecontract',
+        name: 'someaction',
+        data: {},
+        authorization: original
+      }
+      const t = new Transaction(action)
+      assert.deepEqual(t.actions[0].authorization, expected)
+    }
+    const tests: Array<[FlexAuth | FlexAuth[], Authorization[]]> = [
+      ['account', [{ actor: 'account', permission: 'active' }]],
+      ['account@owner', [{ actor: 'account', permission: 'owner' }]],
+      [{ name: 'account' }, [{ actor: 'account', permission: 'active' }]],
+      [
+        { name: 'account', authority: 'owner' },
+        [{ actor: 'account', permission: 'owner' }]
+      ],
+      [
+        { actor: 'account', permission: 'custom' },
+        [{ actor: 'account', permission: 'custom' }]
+      ],
+      [
+        [
+          'account1',
+          'account2@owner',
+          { name: 'account3' },
+          { name: 'account4', authority: 'owner' },
+          { actor: 'account5', permission: 'owner' }
+        ],
+        [
+          { actor: 'account1', permission: 'active' },
+          { actor: 'account2', permission: 'owner' },
+          { actor: 'account3', permission: 'active' },
+          { actor: 'account4', permission: 'owner' },
+          { actor: 'account5', permission: 'owner' }
+        ]
+      ]
+    ]
+    for (const [original, expected] of tests) {
+      checkConversion(original, expected)
+      if (!Array.isArray(original)) {
+        checkConversion([original], expected)
+      }
+    }
   }
 }
