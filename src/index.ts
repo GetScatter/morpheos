@@ -75,13 +75,13 @@ export class Transaction {
     this.eos = eos
   }
 
-  public async send() {
+  public async send(options?: { broadcast?: boolean; sign?: boolean }) {
     if (!this.eos) {
       throw new Error(
         'Cannot send transaction because of missing Morpheos reference'
       )
     }
-    return this.eos.transact(this.actions)
+    return this.eos.transact(this.actions, options)
   }
 }
 
