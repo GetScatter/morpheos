@@ -3,6 +3,8 @@ export interface Authorization {
   permission: string
 }
 
+export type FlexAuth = Authorization | string
+
 export interface Action {
   account: string
   name: string
@@ -49,7 +51,7 @@ export interface PaginationOptions {
 export class Morpheos {
   public eos: any
   constructor(eos: any) {
-    if (eos instanceof Morpheos || eos.eos) {
+    if (eos.eos) {
       this.eos = eos.eos
     } else {
       this.eos = eos
