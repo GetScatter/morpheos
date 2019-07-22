@@ -109,14 +109,15 @@ export class Morpheos {
   }
 
   public async transact(
-    actions: Array<Action | Transaction>,
+    actions: Action | Transaction | Array<Action | Transaction>,
     {
       broadcast = true,
       sign = true
     }: { broadcast?: boolean; sign?: boolean } = {}
   ) {
-    const transaction = new Transaction(actions, this)
+    const transaction = new Transaction(actions)
     actions = transaction.actions
+
     if (this.eos.transact) {
       return this.eos.transact(
         { actions },
