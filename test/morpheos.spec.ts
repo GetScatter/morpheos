@@ -87,7 +87,22 @@ class MorpheosTests {
     })
   }
 
-  @test public async getTableRowsRequests() {
+  @test public async createInstance() {
+    assert.throws(() => new Morpheos(undefined), TypeError)
+    assert.throws(() => new Morpheos(null), TypeError)
+    assert.throws(() => new Morpheos(123), TypeError)
+    assert.throws(() => new Morpheos('some string'), TypeError)
+    assert.throws(() => new Morpheos(true), TypeError)
+    assert.throws(() => new Morpheos(false), TypeError)
+    assert.throws(() => new Morpheos([]), TypeError)
+    assert.throws(() => new Morpheos({}), TypeError)
+    assert.doesNotThrow(() => new Morpheos(this.eos1))
+    assert.doesNotThrow(() => new Morpheos(this.eos2))
+    assert.doesNotThrow(() => new Morpheos(this.morph1))
+    assert.doesNotThrow(() => new Morpheos(this.morph2))
+  }
+
+  @test.skip public async getTableRowsRequests() {
     const options = {
       code: 'eosio.token',
       scope: 'EOS',

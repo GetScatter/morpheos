@@ -49,10 +49,17 @@ export interface PaginationOptions {
 export class Morpheos {
   public eos: any
   constructor(eos: any) {
-    if (eos instanceof Morpheos) {
+    if (eos instanceof Morpheos || eos.eos) {
       this.eos = eos.eos
     } else {
       this.eos = eos
+    }
+    if (
+      !this.eos ||
+      (!(this.eos.transact && this.eos.rpc && this.eos.rpc.get_table_rows) &&
+        !(this.eos.transaction && this.eos.getTableRows))
+    ) {
+      throw new TypeError('Invalid eosjs reference provided')
     }
   }
 
