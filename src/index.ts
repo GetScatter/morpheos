@@ -18,6 +18,20 @@ export interface Action {
 }
 
 export class Transaction {
+  public static extractAccountName(auth: FlexAuth) {
+    if (typeof auth === 'string') {
+      if (auth.includes('@')) {
+        return auth.split('@')[0]
+      } else {
+        return auth
+      }
+    } else if ('name' in auth) {
+      return auth.name
+    } else {
+      return auth.actor
+    }
+  }
+
   public actions: Action[]
   public eos?: Morpheos
 

@@ -34,7 +34,7 @@ class SendableTransactionTests {
     this.morph = new Morpheos(this.eos)
   }
 
-  @test(timeout(5000)) public async flatteningActions() {
+  @test(timeout(5000)) public async flattenActions() {
     const action = {
       account: 'simplesimple',
       name: 'transfer',
@@ -54,7 +54,7 @@ class SendableTransactionTests {
     )
   }
 
-  @test public convertingFlexAuth() {
+  @test public convertFlexAuthToAuthorization() {
     const checkConversion = (
       original: FlexAuth | FlexAuth[],
       expected: Authorization[]
@@ -102,6 +102,19 @@ class SendableTransactionTests {
       if (!Array.isArray(original)) {
         checkConversion([original], expected)
       }
+    }
+  }
+
+  @test public extractAccountNameFromFlexAuth() {
+    const tests: FlexAuth[] = [
+      'account',
+      'account@owner',
+      { name: 'account' },
+      { name: 'account', authority: 'owner' },
+      { actor: 'account', permission: 'owner' }
+    ]
+    for (const auth of tests) {
+      assert.equal(Transaction.extractAccountName(auth), 'account')
     }
   }
 }
