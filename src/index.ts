@@ -12,13 +12,13 @@ export interface Action {
   data: any
 }
 
-export class SendableTransaction {
+export class Transaction {
   public actions: Action[]
-  public eos: Morpheos
+  public eos?: Morpheos
 
   constructor(
-    payload: Action | SendableTransaction | Array<Action | SendableTransaction>,
-    eos: Morpheos
+    payload: Action | Transaction | Array<Action | Transaction>,
+    eos?: Morpheos
   ) {
     if ('actions' in payload) {
       this.actions = payload.actions
@@ -38,6 +38,11 @@ export class SendableTransaction {
   }
 
   public async send() {
+    if (!this.eos) {
+      throw new Error(
+        'Cannot send transaction because of missing Morpheos reference'
+      )
+    }
     return this.eos.transact(this.actions)
   }
 }
@@ -66,13 +71,13 @@ export class Morpheos {
   }
 
   public async transact(
-    actions: Array<Action | SendableTransaction>,
+    actions: Array<Action | Transaction>,
     {
       broadcast = true,
       sign = true
     }: { broadcast?: boolean; sign?: boolean } = {}
   ) {
-    const transaction = new SendableTransaction(actions, this)
+    const transaction = new Transaction(actions, this)
     actions = transaction.actions
     if (this.eos.transact) {
       return this.eos.transact(

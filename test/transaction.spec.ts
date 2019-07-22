@@ -10,7 +10,7 @@ import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig'
 import fetch from 'node-fetch'
 import { TextDecoder, TextEncoder } from 'util'
 
-import { Morpheos, SendableTransaction } from '../src/index'
+import { Morpheos, Transaction } from '../src/index'
 
 const httpEndpoint = 'https://api.jungle.alohaeos.com'
 const privateKey = '5K3MYohjJLNfNGD6Dg2xuqiZcgKejos9bLHwwjkyw7eH3JxvyZj'
@@ -41,10 +41,10 @@ class SendableTransactionTests {
       data: { from: 'from', to: 'to', assetids: [], memo: 'test' },
       authorization: [{ actor: 'account', permission: 'active' }]
     }
-    const t1 = new SendableTransaction({ ...action }, this.morph)
-    const t2 = new SendableTransaction({ ...action }, this.morph)
-    const t3 = new SendableTransaction([t1, t2], this.morph)
-    const all = new SendableTransaction([action, t3], this.morph)
+    const t1 = new Transaction({ ...action })
+    const t2 = new Transaction({ ...action })
+    const t3 = new Transaction([t1, t2])
+    const all = new Transaction([action, t3])
     assert.deepEqual(all.actions, [action, t1.actions[0], t2.actions[0]])
     await assert.isFulfilled(
       this.morph.transact([action, t3], {
