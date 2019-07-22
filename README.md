@@ -1,4 +1,8 @@
-# MorphEOS
+<div style="text-align: center">
+  <img title="Morpheos Logo" src="logo.png" width="100%" style="max-width: 720px"/>
+</div>
+
+# Morpheos
 
 This library allows you to use any version of `eosjs` indistinctly.
 
