@@ -1,49 +1,43 @@
-const maxAmount: BigInt = BigInt(4611686018427387903) // 2^62-1
+import Big from 'big.js'
 
 export class Asset {
-  public amount: bigint
+  public static readonly MAX_AMOUNT = Big('4611686018427387903') // 2^62-1
+
+  public amount: Big
   public symbol: string
   public precision: number
 
-  constructor(amount: bigint, symbol: string, precision: number)
   constructor(asset: string)
-
-  constructor(asset: string | bigint, symbol?: string, precision?: number) {
-    if (typeof asset === 'string') {
-      const splitAsset = asset.split(' ')
-      if (splitAsset.length !== 2) {
-        throw new Error('Invalid asset')
-      }
-      this.symbol = splitAsset[1]
-      const splitAmount = splitAsset[0].split('.')
-      if (splitAmount.length === 2) {
-        this.amount = BigInt(splitAmount[0] + splitAmount[1])
-        this.precision = splitAmount[1].length
-      } else if (splitAmount.length === 1) {
-        this.amount = BigInt(splitAmount[0])
-        this.precision = 0
-      } else {
-        throw new Error('Invalid asset')
-      }
-    } else {
-      if (!symbol || !precision) {
-        throw new Error('symbol and precision must be given')
-      }
-      this.amount = asset
-      this.symbol = symbol
-      this.precision = precision
+  constructor(amount: number | string | Big, symbol: string, precision: number)
+  constructor(
+    asset: number | string | Big,
+    symbol?: string,
+    precision?: number
+  ) {
+    if (
+      typeof asset === 'string' &&
+      typeof symbol === 'undefined' &&
+      typeof precision === 'undefined'
+    ) {
+      const split = this.splitAssetString(asset)
+      asset = split.amount
+      symbol = split.symbol
+      precision = split.precision
     }
-    const regex = new RegExp('^[A-Z]{1,7}$')
-    if (!regex.test(this.symbol)) {
-      throw new Error('Invalid Symbol')
+    if (typeof symbol !== 'string' || !symbol.match('^[A-Z]{1,7}$')) {
+      throw new TypeError('Invalid asset symbol provided')
     }
     if (
-      !Number.isInteger(this.precision) ||
-      this.precision < 0 ||
-      this.precision > 8
+      typeof precision === 'undefined' ||
+      !Number.isSafeInteger(precision) ||
+      precision < 0 ||
+      precision > 255
     ) {
-      throw new Error('Precision must be integer between 0 and 8')
+      throw new TypeError('Invalid asset precision provided')
     }
+    this.amount = Big(asset)
+    this.symbol = symbol
+    this.precision = precision
     this.checkAmountWithinRange()
   }
 
@@ -54,66 +48,100 @@ export class Asset {
     }
     assetString =
       assetString.slice(0, assetString.length - this.precision) +
-      '.' +
-      assetString.slice(assetString.length - this.precision) +
+      (this.precision !== 0
+        ? '.' + assetString.slice(assetString.length - this.precision)
+        : '') +
       ' ' +
       this.symbol
     return assetString
   }
 
-  public add(asset: Asset): Asset {
+  public clone(): Asset {
+    return new Asset(this.amount, this.symbol, this.precision)
+  }
+
+  public add(asset: Asset | string): Asset {
+    if (typeof asset === 'string') {
+      asset = new Asset(asset)
+    }
     if (asset.precision !== this.precision) {
       throw new Error('Precision mismatch')
     }
     if (asset.symbol !== this.symbol) {
       throw new Error('Symbol mismatch')
     }
-    this.amount += asset.amount
-    this.checkAmountWithinRange()
-    return this
+    const value = this.clone()
+    value.amount = value.amount.add(asset.amount)
+    value.checkAmountWithinRange()
+    return value
   }
 
-  public subtract(asset: Asset): Asset {
+  public subtract(asset: Asset | string): Asset {
+    if (typeof asset === 'string') {
+      asset = new Asset(asset)
+    }
     if (asset.precision !== this.precision) {
       throw new Error('Precision mismatch')
     }
     if (asset.symbol !== this.symbol) {
       throw new Error('Symbol mismatch')
     }
-    this.amount -= asset.amount
-    this.checkAmountWithinRange()
-    return this
+    const value = this.clone()
+    value.amount = value.amount.sub(asset.amount)
+    value.checkAmountWithinRange()
+    return value
   }
 
-  public multiply(multiplicator: number | bigint): Asset {
-    if (typeof multiplicator === 'number') {
-      if (Number.isInteger(multiplicator)) {
-        multiplicator = BigInt(multiplicator)
-      } else {
-        throw new Error('Multiplcator must be integer')
-      }
+  public multiply(factor: number | string | Big): Asset {
+    if (typeof factor === 'number' && !Number.isSafeInteger(factor)) {
+      throw new TypeError('Factor must be an integer')
     }
-    this.amount *= multiplicator
-    this.checkAmountWithinRange()
-    return this
+    const value = this.clone()
+    value.amount = value.amount.times(factor)
+    value.checkAmountWithinRange()
+    return value
   }
 
-  public divide(divisor: number | bigint): Asset {
-    if (typeof divisor === 'number') {
-      if (Number.isInteger(divisor)) {
-        divisor = BigInt(divisor)
-      } else {
-        throw new Error('Divisor must be integer')
-      }
+  public divide(divisor: number | string | Big): Asset {
+    if (typeof divisor === 'number' && !Number.isSafeInteger(divisor)) {
+      throw new TypeError('Divisor must be an integer')
     }
-    this.amount /= divisor
-    this.checkAmountWithinRange()
-    return this
+    const value = this.clone()
+    value.amount = value.amount.div(divisor)
+    value.checkAmountWithinRange()
+    return value
+  }
+
+  private splitAssetString(asset: string) {
+    const invalidAsset = 'Invalid asset string provided'
+    const parts = asset.split(' ')
+    if (parts.length !== 2) {
+      throw new TypeError(invalidAsset)
+    }
+    const symbol = parts[1]
+    let amount: string
+    let precision: number
+    const splitAmount = parts[0].split('.')
+    if (splitAmount.length === 2) {
+      amount = splitAmount[0] + splitAmount[1]
+      precision = splitAmount[1].length
+    } else if (splitAmount.length === 1) {
+      amount = splitAmount[0]
+      precision = 0
+    } else {
+      throw new TypeError(invalidAsset)
+    }
+    return { amount, symbol, precision }
   }
 
   private checkAmountWithinRange() {
-    if (!(-maxAmount <= this.amount && this.amount <= maxAmount)) {
-      throw new Error('magnitude of asset amount must be less than 2^62')
+    if (
+      !(
+        this.amount.gte(Asset.MAX_AMOUNT.times(-1)) &&
+        this.amount.lte(Asset.MAX_AMOUNT)
+      )
+    ) {
+      throw new Error('Magnitude of asset amount must be less than 2^62')
     }
   }
 }

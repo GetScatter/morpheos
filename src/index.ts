@@ -1,3 +1,5 @@
+export { Asset } from './asset'
+
 export interface Authorization {
   actor: string
   permission: string
