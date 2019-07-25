@@ -37,8 +37,12 @@ export class Asset {
     if (!regex.test(this.symbol)) {
       throw new Error('Invalid Symbol')
     }
-    if (this.precision > 8) {
-      throw new Error('Precision must not be greater than 8')
+    if (
+      !Number.isInteger(this.precision) ||
+      this.precision < 0 ||
+      this.precision > 8
+    ) {
+      throw new Error('Precision must be integer between 0 and 8')
     }
     this.checkAmountWithinRange()
   }
