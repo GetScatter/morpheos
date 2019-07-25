@@ -3,14 +3,16 @@ import { suite, test } from 'mocha-typescript'
 import * as chai from 'chai'
 const { assert } = chai
 
+import Big from 'big.js'
 import { Asset } from '../src/index'
 
-@suite
+@suite.only
 class AssetTests {
-  @test public async toStringAndBack() {
+  @test public toStringAndBack() {
     const tests = [
       '10.0000 EOS',
       '10.0012 EOS',
+      '0.0012 EOS',
       '10.01 HEY',
       '10.000123000 HI',
       '10.3 BYE',
@@ -21,10 +23,15 @@ class AssetTests {
     ]
     for (const asset of tests) {
       assert.equal(new Asset(asset).toString(), asset)
+      assert.equal(new Asset(`-${asset}`).toString(), `-${asset}`)
     }
   }
 
-  @test public async trimsLeadingZeroes() {
+  @test public normalizesDecimals() {
+    assert.equal(new Asset('.0012 EOS').toString(), '0.0012 EOS')
+  }
+
+  @test public trimsLeadingZeroes() {
     const tests = [
       '010.0000 EOS',
       '0010.0012 EOS',
@@ -34,7 +41,63 @@ class AssetTests {
     ]
     for (const asset of tests) {
       assert.equal(new Asset(asset).toString(), this.trimLeadingZeroes(asset))
+      assert.equal(
+        new Asset(`-${asset}`).toString(),
+        `-${this.trimLeadingZeroes(asset)}`
+      )
     }
+  }
+
+  @test public add() {
+    assert.equal(new Asset('2.00 USD').add('3.00 USD').toString(), '5.00 USD')
+    assert.equal(new Asset('2.00 USD').add('-3.00 USD').toString(), '-1.00 USD')
+    assert.equal(new Asset('-2.00 USD').add('3.00 USD').toString(), '1.00 USD')
+    assert.throws(() => new Asset('2.00 USD').add('3 USD'), TypeError)
+    assert.throws(() => new Asset('2.00 USD').add('-3 USD'), TypeError)
+    assert.throws(() => new Asset('-2.00 USD').add('3 USD'), TypeError)
+  }
+
+  @test public subtract() {
+    assert.equal(new Asset('5.00 USD').sub('3.00 USD').toString(), '2.00 USD')
+    assert.equal(new Asset('5.00 USD').sub('7.00 USD').toString(), '-2.00 USD')
+    assert.equal(new Asset('-5.00 USD').sub('4.00 USD').toString(), '-9.00 USD')
+    assert.equal(new Asset('5.00 USD').sub('-7.00 USD').toString(), '12.00 USD')
+    assert.throws(() => new Asset('5.00 USD').add('3 USD'), TypeError)
+    assert.throws(() => new Asset('-5.00 USD').add('3 USD'), TypeError)
+    assert.throws(() => new Asset('5.00 USD').add('-3 USD'), TypeError)
+  }
+
+  @test public multiply() {
+    assert.equal(new Asset('2.00 USD').mul(3).toString(), '6.00 USD')
+    assert.equal(new Asset('2.00 USD').mul('3').toString(), '6.00 USD')
+    assert.equal(new Asset('2.00 USD').mul(Big(3)).toString(), '6.00 USD')
+    assert.equal(new Asset('2.00 USD').mul(-3).toString(), '-6.00 USD')
+    assert.equal(new Asset('2.00 USD').mul('-3').toString(), '-6.00 USD')
+    assert.equal(new Asset('2.00 USD').mul(Big(-3)).toString(), '-6.00 USD')
+    assert.equal(new Asset('-2.00 USD').mul(3).toString(), '-6.00 USD')
+    assert.equal(new Asset('-2.00 USD').mul('3').toString(), '-6.00 USD')
+    assert.equal(new Asset('-2.00 USD').mul(Big(3)).toString(), '-6.00 USD')
+    assert.throws(() => new Asset('2.00 USD').mul(3.14), TypeError)
+    assert.throws(() => new Asset('-2.00 USD').mul(3.14), TypeError)
+    assert.throws(() => new Asset('2.00 USD').mul(-3.14), TypeError)
+  }
+
+  @test public divide() {
+    assert.equal(new Asset('6.00 USD').div(3).toString(), '2.00 USD')
+    assert.equal(new Asset('6.00 USD').div('3').toString(), '2.00 USD')
+    assert.equal(new Asset('6.00 USD').div(Big(3)).toString(), '2.00 USD')
+    assert.equal(new Asset('6.00 USD').div(-3).toString(), '-2.00 USD')
+    assert.equal(new Asset('6.00 USD').div('-3').toString(), '-2.00 USD')
+    assert.equal(new Asset('6.00 USD').div(Big(-3)).toString(), '-2.00 USD')
+    assert.equal(new Asset('-6.00 USD').div(3).toString(), '-2.00 USD')
+    assert.equal(new Asset('-6.00 USD').div('3').toString(), '-2.00 USD')
+    assert.equal(new Asset('-6.00 USD').div(Big(3)).toString(), '-2.00 USD')
+    assert.throws(() => new Asset('6.00 USD').div(3.14), TypeError)
+  }
+
+  @test public clone() {
+    const asset = new Asset('10 BUCKS')
+    assert.deepEqual(asset, asset.clone())
   }
 
   private trimLeadingZeroes(asset: string) {

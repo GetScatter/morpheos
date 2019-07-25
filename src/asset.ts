@@ -19,10 +19,7 @@ export class Asset {
       typeof symbol === 'undefined' &&
       typeof precision === 'undefined'
     ) {
-      const split = this.splitAssetString(asset)
-      asset = split.amount
-      symbol = split.symbol
-      precision = split.precision
+      ;({ amount: asset, symbol, precision } = this.splitAssetString(asset))
     }
     if (typeof symbol !== 'string' || !symbol.match('^[A-Z]{1,7}$')) {
       throw new TypeError('Invalid asset symbol provided')
@@ -42,11 +39,16 @@ export class Asset {
   }
 
   public toString(): string {
+    const isNegative = this.amount.lt(0)
     let assetString = this.amount.toString()
+    if (isNegative) {
+      assetString = assetString.slice(1)
+    }
     while (assetString.length < this.precision + 1) {
       assetString = '0' + assetString
     }
     assetString =
+      (isNegative ? '-' : '') +
       assetString.slice(0, assetString.length - this.precision) +
       (this.precision !== 0
         ? '.' + assetString.slice(assetString.length - this.precision)
@@ -65,10 +67,10 @@ export class Asset {
       asset = new Asset(asset)
     }
     if (asset.precision !== this.precision) {
-      throw new Error('Precision mismatch')
+      throw new TypeError('Precision mismatch')
     }
     if (asset.symbol !== this.symbol) {
-      throw new Error('Symbol mismatch')
+      throw new TypeError('Symbol mismatch')
     }
     const value = this.clone()
     value.amount = value.amount.add(asset.amount)
@@ -76,20 +78,32 @@ export class Asset {
     return value
   }
 
+  public plus(asset: Asset | string): Asset {
+    return this.add(asset)
+  }
+
   public subtract(asset: Asset | string): Asset {
     if (typeof asset === 'string') {
       asset = new Asset(asset)
     }
     if (asset.precision !== this.precision) {
-      throw new Error('Precision mismatch')
+      throw new TypeError('Precision mismatch')
     }
     if (asset.symbol !== this.symbol) {
-      throw new Error('Symbol mismatch')
+      throw new TypeError('Symbol mismatch')
     }
     const value = this.clone()
     value.amount = value.amount.sub(asset.amount)
     value.checkAmountWithinRange()
     return value
+  }
+
+  public minus(asset: Asset | string): Asset {
+    return this.subtract(asset)
+  }
+
+  public sub(asset: Asset | string): Asset {
+    return this.subtract(asset)
   }
 
   public multiply(factor: number | string | Big): Asset {
@@ -102,6 +116,14 @@ export class Asset {
     return value
   }
 
+  public mul(factor: number | string | Big): Asset {
+    return this.multiply(factor)
+  }
+
+  public prod(factor: number | string | Big): Asset {
+    return this.multiply(factor)
+  }
+
   public divide(divisor: number | string | Big): Asset {
     if (typeof divisor === 'number' && !Number.isSafeInteger(divisor)) {
       throw new TypeError('Divisor must be an integer')
@@ -110,6 +132,10 @@ export class Asset {
     value.amount = value.amount.div(divisor)
     value.checkAmountWithinRange()
     return value
+  }
+
+  public div(divisor: number | string | Big): Asset {
+    return this.divide(divisor)
   }
 
   private splitAssetString(asset: string) {
