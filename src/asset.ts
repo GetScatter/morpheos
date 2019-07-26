@@ -2,6 +2,7 @@ import Big from 'big.js'
 
 export class Asset {
   public static readonly MAX_AMOUNT = Big('4611686018427387903') // 2^62-1
+  public static readonly MAX_PRECISION = 18
 
   public amount: Big
   public symbol: string
@@ -28,7 +29,7 @@ export class Asset {
       typeof precision === 'undefined' ||
       !Number.isSafeInteger(precision) ||
       precision < 0 ||
-      precision > 255
+      precision > MAX_PRECISION
     ) {
       throw new TypeError('Invalid asset precision provided')
     }
