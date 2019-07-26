@@ -29,7 +29,7 @@ export class Asset {
       typeof precision === 'undefined' ||
       !Number.isSafeInteger(precision) ||
       precision < 0 ||
-      precision > MAX_PRECISION
+      precision > Asset.MAX_PRECISION
     ) {
       throw new TypeError('Invalid asset precision provided')
     }
@@ -137,6 +137,78 @@ export class Asset {
 
   public div(divisor: number | string | Big): Asset {
     return this.divide(divisor)
+  }
+
+  public equals(asset: Asset | string): boolean {
+    if (!asset) {
+      return false
+    }
+    if (typeof asset === 'string') {
+      asset = new Asset(asset)
+    }
+    return (
+      this.symbol === asset.symbol &&
+      this.precision === asset.precision &&
+      this.amount.eq(asset.amount)
+    )
+  }
+
+  public equal(other: Asset | string): boolean {
+    return this.equals(other)
+  }
+
+  public eq(other: Asset | string): boolean {
+    return this.equals(other)
+  }
+
+  public greaterThan(asset: Asset | string): boolean {
+    if (typeof asset === 'string') {
+      asset = new Asset(asset)
+    }
+    if (asset.precision !== this.precision) {
+      throw new TypeError('Precision mismatch')
+    }
+    if (asset.symbol !== this.symbol) {
+      throw new TypeError('Symbol mismatch')
+    }
+    return this.amount.gt(asset.amount)
+  }
+
+  public gt(asset: Asset | string): boolean {
+    return this.greaterThan(asset)
+  }
+
+  public lessThan(asset: Asset | string): boolean {
+    if (typeof asset === 'string') {
+      asset = new Asset(asset)
+    }
+    if (asset.precision !== this.precision) {
+      throw new TypeError('Precision mismatch')
+    }
+    if (asset.symbol !== this.symbol) {
+      throw new TypeError('Symbol mismatch')
+    }
+    return this.amount.lt(asset.amount)
+  }
+
+  public lt(asset: Asset | string): boolean {
+    return this.lessThan(asset)
+  }
+
+  public greaterThanOrEqual(asset: Asset | string): boolean {
+    return this.gt(asset) || this.eq(asset)
+  }
+
+  public gte(asset: Asset | string): boolean {
+    return this.greaterThanOrEqual(asset)
+  }
+
+  public lessThanOrEqual(asset: Asset | string): boolean {
+    return this.lt(asset) || this.eq(asset)
+  }
+
+  public lte(asset: Asset | string): boolean {
+    return this.lessThanOrEqual(asset)
   }
 
   private splitAssetString(asset: string) {

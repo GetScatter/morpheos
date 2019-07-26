@@ -31,6 +31,18 @@ class AssetTests {
     assert.equal(new Asset('.0012 EOS').toString(), '0.0012 EOS')
   }
 
+  @test public normalizesNegativeZero() {
+    assert.equal(new Asset('-0.00 EOS').toString(), '0.00 EOS')
+    assert.equal(new Asset('-0 EOS').toString(), '0 EOS')
+  }
+
+  @test public normalizesTrailingDecimalPoint() {
+    assert.equal(new Asset('1. EOS').toString(), '1 EOS')
+    assert.equal(new Asset('123. EOS').toString(), '123 EOS')
+    assert.equal(new Asset('-1. EOS').toString(), '-1 EOS')
+    assert.equal(new Asset('-123. EOS').toString(), '-123 EOS')
+  }
+
   @test public trimsLeadingZeroes() {
     const tests = [
       '010.0000 EOS',
@@ -93,6 +105,69 @@ class AssetTests {
     assert.equal(new Asset('-6.00 USD').div('3').toString(), '-2.00 USD')
     assert.equal(new Asset('-6.00 USD').div(Big(3)).toString(), '-2.00 USD')
     assert.throws(() => new Asset('6.00 USD').div(3.14), TypeError)
+  }
+
+  @test public equal() {
+    assert.equal(new Asset('6.00 EOS').eq('6.00 EOS'), true)
+    assert.equal(new Asset('6.00 EOS').eq(new Asset('6.00 EOS')), true)
+    assert.equal(new Asset('6.00 EOS').eq('5.00 EOS'), false)
+    assert.equal(new Asset('6.00 EOS').eq(new Asset('5.00 EOS')), false)
+  }
+
+  @test public greaterThan() {
+    assert.equal(new Asset('6.00 EOS').gt('5.00 EOS'), true)
+    assert.equal(new Asset('6.00 EOS').gt(new Asset('5.00 EOS')), true)
+    assert.equal(new Asset('6.00 EOS').gt('9.00 EOS'), false)
+    assert.equal(new Asset('6.00 EOS').gt(new Asset('9.00 EOS')), false)
+    assert.equal(new Asset('-6.00 EOS').gt('-9.00 EOS'), true)
+    assert.equal(new Asset('-6.00 EOS').gt(new Asset('-9.00 EOS')), true)
+    assert.equal(new Asset('-6.00 EOS').gt('9.00 EOS'), false)
+    assert.equal(new Asset('-6.00 EOS').gt(new Asset('9.00 EOS')), false)
+    assert.throws(() => new Asset('6.00 EOS').gt('2 EOS'))
+  }
+
+  @test public lessThan() {
+    assert.equal(new Asset('3.00 EOS').lt('5.00 EOS'), true)
+    assert.equal(new Asset('3.00 EOS').lt(new Asset('5.00 EOS')), true)
+    assert.equal(new Asset('3.00 EOS').lt('2.00 EOS'), false)
+    assert.equal(new Asset('3.00 EOS').lt(new Asset('2.00 EOS')), false)
+    assert.equal(new Asset('-6.00 EOS').lt('-4.00 EOS'), true)
+    assert.equal(new Asset('-6.00 EOS').lt(new Asset('-4.00 EOS')), true)
+    assert.equal(new Asset('-6.00 EOS').lt('-9.00 EOS'), false)
+    assert.equal(new Asset('-6.00 EOS').lt(new Asset('-9.00 EOS')), false)
+    assert.throws(() => new Asset('6.00 EOS').lt('2 EOS'))
+  }
+
+  @test public greaterThanOrEqual() {
+    assert.equal(new Asset('3.00 EOS').gte('1.00 EOS'), true)
+    assert.equal(new Asset('3.00 EOS').gte(new Asset('1.00 EOS')), true)
+    assert.equal(new Asset('3.00 EOS').gte('3.00 EOS'), true)
+    assert.equal(new Asset('3.00 EOS').gte(new Asset('3.00 EOS')), true)
+    assert.equal(new Asset('3.00 EOS').gte('4.00 EOS'), false)
+    assert.equal(new Asset('3.00 EOS').gte(new Asset('4.00 EOS')), false)
+    assert.equal(new Asset('-3.00 EOS').gte('-4.00 EOS'), true)
+    assert.equal(new Asset('-3.00 EOS').gte(new Asset('-4.00 EOS')), true)
+    assert.equal(new Asset('-3.00 EOS').gte('-3.00 EOS'), true)
+    assert.equal(new Asset('-3.00 EOS').gte(new Asset('-3.00 EOS')), true)
+    assert.equal(new Asset('-3.00 EOS').gte('4.00 EOS'), false)
+    assert.equal(new Asset('-3.00 EOS').gte(new Asset('4.00 EOS')), false)
+    assert.throws(() => new Asset('6.00 EOS').gte('2 EOS'))
+  }
+
+  @test public lessThanOrEqual() {
+    assert.equal(new Asset('3.00 EOS').lte('1.00 EOS'), false)
+    assert.equal(new Asset('3.00 EOS').lte(new Asset('1.00 EOS')), false)
+    assert.equal(new Asset('3.00 EOS').lte('3.00 EOS'), true)
+    assert.equal(new Asset('3.00 EOS').lte(new Asset('3.00 EOS')), true)
+    assert.equal(new Asset('3.00 EOS').lte('4.00 EOS'), true)
+    assert.equal(new Asset('3.00 EOS').lte(new Asset('4.00 EOS')), true)
+    assert.equal(new Asset('-3.00 EOS').lte('-4.00 EOS'), false)
+    assert.equal(new Asset('-3.00 EOS').lte(new Asset('-4.00 EOS')), false)
+    assert.equal(new Asset('-3.00 EOS').lte('-3.00 EOS'), true)
+    assert.equal(new Asset('-3.00 EOS').lte(new Asset('-3.00 EOS')), true)
+    assert.equal(new Asset('-3.00 EOS').lte('4.00 EOS'), true)
+    assert.equal(new Asset('-3.00 EOS').lte(new Asset('4.00 EOS')), true)
+    assert.throws(() => new Asset('6.00 EOS').lte('2 EOS'))
   }
 
   @test public clone() {
