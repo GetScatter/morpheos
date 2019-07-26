@@ -208,6 +208,25 @@ await transfer({ actor: 'myaccount', permission: 'active' }, 'youraccount', '1.0
 await transfer(scatterAccount, 'youraccount', '1.0000 EOS').send();
 ```
 
+### Asset
+
+Morpheos also provides an `Asset` class to manipulate EOSIO assets more easily:
+
+```js
+import { Asset } from 'morpheos'
+
+let a = new Asset('42.0000 EOS'); // From string representation
+a = new Asset(42, 'EOS', 4); // From amount, symbol, precision
+a.toString() // '42.0000 EOS'
+
+// Arithmetic operations
+let b = a.plus(new Asset('30.0000 EOS')) // Does not change `a`, just returns result
+b = a.plus('30.0000 EOS') // Can also pass the string representation directly
+b = a.minus('500.0000 EOS') // Also supports negative amounts
+b = a.times(4)
+b = a.div(2)
+```
+
 ## Contributing
 
 Please submit an issue if you find any bugs or if you would like to suggest a feature.
