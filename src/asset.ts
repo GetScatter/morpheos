@@ -1,17 +1,22 @@
-import Big from 'big.js'
+import * as BigInteger from 'big-integer'
+type BigInteger = BigInteger.BigInteger
 
 export class Asset {
-  public static readonly MAX_AMOUNT = Big('4611686018427387903') // 2^62-1
+  public static readonly MAX_AMOUNT = BigInteger('4611686018427387903') // 2^62-1
   public static readonly MAX_PRECISION = 18
 
-  public amount: Big
+  public amount: BigInteger
   public symbol: string
   public precision: number
 
   constructor(asset: string)
-  constructor(amount: number | string | Big, symbol: string, precision: number)
   constructor(
-    asset: number | string | Big,
+    amount: number | string | BigInteger,
+    symbol: string,
+    precision: number
+  )
+  constructor(
+    asset: number | string | BigInteger,
     symbol?: string,
     precision?: number
   ) {
@@ -33,7 +38,9 @@ export class Asset {
     ) {
       throw new TypeError('Invalid asset precision provided')
     }
-    this.amount = Big(asset)
+    this.amount = BigInteger.isInstance(asset)
+      ? asset.plus(0)
+      : BigInteger(asset.toString())
     this.symbol = symbol
     this.precision = precision
     this.checkAmountWithinRange()
@@ -60,19 +67,14 @@ export class Asset {
   }
 
   public clone(): Asset {
-    return new Asset(this.amount, this.symbol, this.precision)
+    return new Asset(this.amount.plus(0), this.symbol, this.precision)
   }
 
   public add(asset: Asset | string): Asset {
     if (typeof asset === 'string') {
       asset = new Asset(asset)
     }
-    if (asset.precision !== this.precision) {
-      throw new TypeError('Precision mismatch')
-    }
-    if (asset.symbol !== this.symbol) {
-      throw new TypeError('Symbol mismatch')
-    }
+    this.validateCompatibility(asset)
     const value = this.clone()
     value.amount = value.amount.add(asset.amount)
     value.checkAmountWithinRange()
@@ -87,14 +89,9 @@ export class Asset {
     if (typeof asset === 'string') {
       asset = new Asset(asset)
     }
-    if (asset.precision !== this.precision) {
-      throw new TypeError('Precision mismatch')
-    }
-    if (asset.symbol !== this.symbol) {
-      throw new TypeError('Symbol mismatch')
-    }
+    this.validateCompatibility(asset)
     const value = this.clone()
-    value.amount = value.amount.sub(asset.amount)
+    value.amount = value.amount.subtract(asset.amount)
     value.checkAmountWithinRange()
     return value
   }
@@ -107,49 +104,41 @@ export class Asset {
     return this.subtract(asset)
   }
 
-  public multiply(factor: number | string | Big): Asset {
-    if (typeof factor === 'number' && !Number.isSafeInteger(factor)) {
-      throw new TypeError('Factor must be an integer')
-    }
+  public multiply(factor: number | string | BigInteger): Asset {
     const value = this.clone()
-    value.amount = value.amount.times(factor)
+    value.amount = value.amount.multiply(factor)
     value.checkAmountWithinRange()
     return value
   }
 
-  public mul(factor: number | string | Big): Asset {
+  public mul(factor: number | string | BigInteger): Asset {
     return this.multiply(factor)
   }
 
-  public prod(factor: number | string | Big): Asset {
+  public prod(factor: number | string | BigInteger): Asset {
     return this.multiply(factor)
   }
 
-  public divide(divisor: number | string | Big): Asset {
-    if (typeof divisor === 'number' && !Number.isSafeInteger(divisor)) {
-      throw new TypeError('Divisor must be an integer')
-    }
+  public divide(divisor: number | string | BigInteger): Asset {
     const value = this.clone()
-    value.amount = value.amount.div(divisor)
+    value.amount = value.amount.divide(divisor)
     value.checkAmountWithinRange()
     return value
   }
 
-  public div(divisor: number | string | Big): Asset {
+  public div(divisor: number | string | BigInteger): Asset {
     return this.divide(divisor)
   }
 
   public equals(asset: Asset | string): boolean {
-    if (!asset) {
-      return false
-    }
     if (typeof asset === 'string') {
       asset = new Asset(asset)
     }
     return (
-      this.symbol === asset.symbol &&
-      this.precision === asset.precision &&
-      this.amount.eq(asset.amount)
+      asset &&
+      (this.symbol === asset.symbol &&
+        this.precision === asset.precision &&
+        this.amount.eq(asset.amount))
     )
   }
 
@@ -165,12 +154,7 @@ export class Asset {
     if (typeof asset === 'string') {
       asset = new Asset(asset)
     }
-    if (asset.precision !== this.precision) {
-      throw new TypeError('Precision mismatch')
-    }
-    if (asset.symbol !== this.symbol) {
-      throw new TypeError('Symbol mismatch')
-    }
+    this.validateCompatibility(asset)
     return this.amount.gt(asset.amount)
   }
 
@@ -182,12 +166,7 @@ export class Asset {
     if (typeof asset === 'string') {
       asset = new Asset(asset)
     }
-    if (asset.precision !== this.precision) {
-      throw new TypeError('Precision mismatch')
-    }
-    if (asset.symbol !== this.symbol) {
-      throw new TypeError('Symbol mismatch')
-    }
+    this.validateCompatibility(asset)
     return this.amount.lt(asset.amount)
   }
 
@@ -233,11 +212,20 @@ export class Asset {
     return { amount, symbol, precision }
   }
 
+  private validateCompatibility(asset: Asset) {
+    if (asset.precision !== this.precision) {
+      throw new TypeError('Precision mismatch')
+    }
+    if (asset.symbol !== this.symbol) {
+      throw new TypeError('Symbol mismatch')
+    }
+  }
+
   private checkAmountWithinRange() {
     if (
       !(
-        this.amount.gte(Asset.MAX_AMOUNT.times(-1)) &&
-        this.amount.lte(Asset.MAX_AMOUNT)
+        this.amount.geq(Asset.MAX_AMOUNT.negate()) &&
+        this.amount.leq(Asset.MAX_AMOUNT)
       )
     ) {
       throw new Error('Magnitude of asset amount must be less than 2^62')

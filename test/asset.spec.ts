@@ -3,7 +3,7 @@ import { suite, test } from 'mocha-typescript'
 import * as chai from 'chai'
 const { assert } = chai
 
-import Big from 'big.js'
+import * as BigInteger from 'big-integer'
 import { Asset } from '../src/index'
 
 @suite.only
@@ -43,20 +43,17 @@ class AssetTests {
     assert.equal(new Asset('-123. EOS').toString(), '-123 EOS')
   }
 
-  @test public trimsLeadingZeroes() {
+  @test public trimsLeadingZeros() {
     const tests = [
-      '010.0000 EOS',
-      '0010.0012 EOS',
-      '00010.01 HEY',
-      '0010.000123000 HI',
-      '0000000010.3 BYE'
+      ['010.0000 EOS', '10.0000 EOS'],
+      ['0010.0012 EOS', '10.0012 EOS'],
+      ['00010.01 HEY', '10.01 HEY'],
+      ['0010.000123000 HI', '10.000123000 HI'],
+      ['0000000010.3 BYE', '10.3 BYE']
     ]
-    for (const asset of tests) {
-      assert.equal(new Asset(asset).toString(), this.trimLeadingZeroes(asset))
-      assert.equal(
-        new Asset(`-${asset}`).toString(),
-        `-${this.trimLeadingZeroes(asset)}`
-      )
+    for (const [input, output] of tests) {
+      assert.equal(new Asset(input).toString(), output)
+      assert.equal(new Asset(`-${input}`).toString(), `-${output}`)
     }
   }
 
@@ -82,29 +79,66 @@ class AssetTests {
   @test public multiply() {
     assert.equal(new Asset('2.00 USD').mul(3).toString(), '6.00 USD')
     assert.equal(new Asset('2.00 USD').mul('3').toString(), '6.00 USD')
-    assert.equal(new Asset('2.00 USD').mul(Big(3)).toString(), '6.00 USD')
+    assert.equal(
+      new Asset('2.00 USD').mul(BigInteger(3)).toString(),
+      '6.00 USD'
+    )
     assert.equal(new Asset('2.00 USD').mul(-3).toString(), '-6.00 USD')
     assert.equal(new Asset('2.00 USD').mul('-3').toString(), '-6.00 USD')
-    assert.equal(new Asset('2.00 USD').mul(Big(-3)).toString(), '-6.00 USD')
+    assert.equal(
+      new Asset('2.00 USD').mul(BigInteger(-3)).toString(),
+      '-6.00 USD'
+    )
     assert.equal(new Asset('-2.00 USD').mul(3).toString(), '-6.00 USD')
     assert.equal(new Asset('-2.00 USD').mul('3').toString(), '-6.00 USD')
-    assert.equal(new Asset('-2.00 USD').mul(Big(3)).toString(), '-6.00 USD')
-    assert.throws(() => new Asset('2.00 USD').mul(3.14), TypeError)
-    assert.throws(() => new Asset('-2.00 USD').mul(3.14), TypeError)
-    assert.throws(() => new Asset('2.00 USD').mul(-3.14), TypeError)
+    assert.equal(
+      new Asset('-2.00 USD').mul(BigInteger(3)).toString(),
+      '-6.00 USD'
+    )
+    assert.throws(() => new Asset('2.00 USD').mul(3.14), RangeError)
+    assert.throws(() => new Asset('-2.00 USD').mul(3.14), RangeError)
+    assert.throws(() => new Asset('2.00 USD').mul(-3.14), RangeError)
   }
 
   @test public divide() {
     assert.equal(new Asset('6.00 USD').div(3).toString(), '2.00 USD')
     assert.equal(new Asset('6.00 USD').div('3').toString(), '2.00 USD')
-    assert.equal(new Asset('6.00 USD').div(Big(3)).toString(), '2.00 USD')
+    assert.equal(
+      new Asset('6.00 USD').div(BigInteger(3)).toString(),
+      '2.00 USD'
+    )
     assert.equal(new Asset('6.00 USD').div(-3).toString(), '-2.00 USD')
     assert.equal(new Asset('6.00 USD').div('-3').toString(), '-2.00 USD')
-    assert.equal(new Asset('6.00 USD').div(Big(-3)).toString(), '-2.00 USD')
+    assert.equal(
+      new Asset('6.00 USD').div(BigInteger(-3)).toString(),
+      '-2.00 USD'
+    )
     assert.equal(new Asset('-6.00 USD').div(3).toString(), '-2.00 USD')
     assert.equal(new Asset('-6.00 USD').div('3').toString(), '-2.00 USD')
-    assert.equal(new Asset('-6.00 USD').div(Big(3)).toString(), '-2.00 USD')
-    assert.throws(() => new Asset('6.00 USD').div(3.14), TypeError)
+    assert.equal(
+      new Asset('-6.00 USD').div(BigInteger(3)).toString(),
+      '-2.00 USD'
+    )
+
+    assert.equal(new Asset('6.00 USD').div(4).toString(), '1.50 USD')
+    assert.equal(new Asset('6.00 USD').div('4').toString(), '1.50 USD')
+    assert.equal(
+      new Asset('6.00 USD').div(BigInteger(4)).toString(),
+      '1.50 USD'
+    )
+    assert.equal(new Asset('6.00 USD').div(-4).toString(), '-1.50 USD')
+    assert.equal(new Asset('6.00 USD').div('-4').toString(), '-1.50 USD')
+    assert.equal(
+      new Asset('6.00 USD').div(BigInteger(-4)).toString(),
+      '-1.50 USD'
+    )
+    assert.equal(new Asset('-6.00 USD').div(4).toString(), '-1.50 USD')
+    assert.equal(new Asset('-6.00 USD').div('4').toString(), '-1.50 USD')
+    assert.equal(
+      new Asset('-6.00 USD').div(BigInteger(4)).toString(),
+      '-1.50 USD'
+    )
+    assert.throws(() => new Asset('6.00 USD').div(3.14), RangeError)
   }
 
   @test public equal() {
@@ -173,12 +207,5 @@ class AssetTests {
   @test public clone() {
     const asset = new Asset('10 BUCKS')
     assert.deepEqual(asset, asset.clone())
-  }
-
-  private trimLeadingZeroes(asset: string) {
-    while (asset.charAt(0) === '0') {
-      asset = asset.slice(1)
-    }
-    return asset
   }
 }
