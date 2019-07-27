@@ -1,6 +1,6 @@
 {
   "name": "morpheos",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Use eosjs 1 or 2 indistinctly.",
   "author": "GetScatter Ltd.",
   "repository": {
