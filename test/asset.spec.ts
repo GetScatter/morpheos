@@ -138,6 +138,9 @@ class AssetTests {
       new Asset('-6.00 USD').div(BigInteger(4)).toString(),
       '-1.50 USD'
     )
+
+    assert.equal(new Asset('1.23 EOS').div(10).toString(), '0.12 EOS')
+    assert.equal(new Asset('1.23 EOS').div(100).toString(), '0.01 EOS')
     assert.throws(() => new Asset('6.00 USD').div(3.14), RangeError)
   }
 
