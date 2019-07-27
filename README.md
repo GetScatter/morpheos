@@ -217,14 +217,26 @@ import { Asset } from 'morpheos'
 
 let a = new Asset('42.0000 EOS'); // From string representation
 a = new Asset(42, 'EOS', 4); // From amount, symbol, precision
-a.toString() // '42.0000 EOS'
+a.toString(); // '42.0000 EOS'
 
 // Arithmetic operations
-let b = a.plus(new Asset('30.0000 EOS')) // Does not change `a`, just returns result
-b = a.plus('30.0000 EOS') // Can also pass the string representation directly
-b = a.minus('500.0000 EOS') // Also supports negative amounts
-b = a.times(4)
-b = a.div(2)
+let b = a.plus(new Asset('30.0000 EOS')); // Does not change `a`, just returns result
+b = a.plus('30.0000 EOS'); // Can also pass the string representation directly
+b = a.minus('500.0000 EOS'); // Also supports negative amounts
+b = a.times(4);
+b = a.div(2);
+
+// Comparison operators
+a.equal(b);
+a.equal('9000.0001 EOS'); // Can also pass the string representation directly
+a.greaterThan(b);
+a.gt(b);
+a.lessThan(b);
+a.lt(b);
+a.greaterThanOrEqual(b);
+a.gte(b);
+a.lessThanOrEqual(b);
+a.lte(b);
 ```
 
 ## Contributing
