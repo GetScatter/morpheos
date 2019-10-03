@@ -168,4 +168,10 @@ export class Morpheos {
     )
     return result.rows[0]
   }
+
+  public createTransaction(
+    payload: Action | Transaction | Array<Action | Transaction>
+  ) {
+    return new Transaction(payload, this)
+  }
 }
