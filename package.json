@@ -49,7 +49,7 @@
     "eosjs": "^20.0.0",
     "eosjs-legacy": "npm:eosjs@16.0.9",
     "husky": "^3.0.0",
-    "mocha": "^6.1.4",
+    "mocha": "^10.2.0",
     "mocha-typescript": "^1.1.17",
     "node-fetch": "^2.6.0",
     "prettier": "^1.18.2",
